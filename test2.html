@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnLoop Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; text-align: center; }
+        input { display: block; width: 80%; margin: 10px auto; padding: 10px; font-size: 16px; }
+        button { padding: 12px 20px; background: blue; color: white; border: none; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>LearnLoop Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="handleLogin()">Login / Signup</button>
+
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // ⚠️ YAHAN APNI DETAILS DAAL (Bina quotes hataye)
+        const SUPABASE_URL = "https://TERA_PROJECT_ID.supabase.co"; 
+        const SUPABASE_KEY = "TERA_ANON_PUBLIC_KEY";
+        
+        let supabase;
+        
+        // Supabase ko initialize karne ki koshish
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log("Supabase Loaded!");
+        } catch (err) {
+            alert("Supabase Init Error: " + err.message);
+        }
+
+        // Login Function
+        async function handleLogin() {
+            alert("Button Daba Diya! Processing..."); // Ye alert aaya toh button kaam kar raha hai
+            
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                alert("Email aur password dono daal bhai.");
+                return;
+            }
+
+            try {
+                // 1. Pehle Login Karne ki Koshish
+                const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+                if (loginData.user) {
+                    alert("Login Successful! Redirecting...");
+                    window.location.href = "onboarding.html";
+                    return;
+                }
+
+                // 2. Agar Login fail ho (User nahi mila), to Signup karo
+                if (loginError) {
+                    alert("Naya user hai, Signup ho raha hai...");
+                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+
+                    if (signUpError) {
+                        alert("SIGNUP ERROR: " + signUpError.message);
+                        return;
+                    }
+
+                    if (signUpData.user) {
+                        alert("Signup Successful! Redirecting...");
+                        window.location.href = "onboarding.html";
+                    }
+                }
+            } catch (err) {
+                alert("FATAL ERROR: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
