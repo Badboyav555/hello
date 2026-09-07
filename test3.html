@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #4338ca; }
+        .info { background: #e0e7ff; padding: 10px; border-radius: 5px; font-size: 14px; margin-bottom: 15px; color: #3730a3; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>LearnLoop Auth</h2>
+        
+        <div class="info">
+            Ye pehle Login karne ki koshish karega. Agar login fail ho gaya (user nahi mila), toh automatic naya account banayega (Signup).
+        </div>
+
+        <input type="email" id="email" placeholder="Enter Email (e.g., test@test.com)">
+        <input type="password" id="password" placeholder="Enter Password (min 6 chars)">
+        
+        <button onclick="handleAuth()">Login / Signup</button>
+    </div>
+
+    <!-- 1. Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // ⚠️ STEP 1: Yahan apni Supabase ki details daal (Bina quotes hataye)
+        const SUPABASE_URL = "https://rrlycsatujfqpuuydcmo.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_Z6QtDrhOWKS5ogEW9gcLvA__Y5WZfxT";
+        
+        let supabase;
+        
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            alert("✅ Supabase Initialize Ho Gaya! Ab tum login/signup kar sakte ho.");
+        } catch (err) {
+            alert("❌ Supabase Initialize Nahi Hua: " + err.message);
+        }
+
+        // Auth Function
+        async function handleAuth() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                alert("Email aur password dono daal bhai.");
+                return;
+            }
+
+            try {
+                // STEP 2: Pehle Login karne ki koshish karo
+                alert("⏳ Login check ho raha hai...");
+                const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
+                    email: email, 
+                    password: password 
+                });
+
+                // Agar Login successful hai
+                if (loginData && loginData.user) {
+                    alert("🎉 Login Successful! User ID: " + loginData.user.id);
+                    
+                    // Yahan tu dusre page pe redirect karwa sakta hai
+                    // window.location.href = "dashboard.html";
+                    return;
+                }
+
+                // STEP 3: Agar login fail ho gaya (user exist nahi karta), toh Signup karo
+                if (loginError) {
+                    alert("ℹ️ User nahi mila. Naya account ban raha hai (Signup)...");
+                    
+                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
+                        email: email, 
+                        password: password 
+                    });
+
+                    // Agar Signup me error aaya
+                    if (signUpError) {
+                        alert("❌ SIGNUP ERROR: " + signUpError.message);
+                        return;
+                    }
+
+                    // Agar Signup successful hai
+                    if (signUpData && signUpData.user) {
+                        // Check if session is created (Agar email verification off hai, toh session ban jayega)
+                        if (signUpData.session) {
+                            alert("🎉 Account Created & Logged In! User ID: " + signUpData.user.id);
+                        } else {
+                            alert("✅ Account Created! Lekin login nahi hua. Supabase me 'Confirm Email' setting off karo.");
+                        }
+                    }
+                }
+
+            } catch (err) {
+                // Agar code me koi bada error aaya
+                alert("🚨 FATAL ERROR: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
