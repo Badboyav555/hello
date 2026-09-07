@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnLoop | Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 90%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #4338ca; }
+        .status { margin-top: 15px; color: red; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h2>LearnLoop Login</h2>
+        <input type="email" id="email" placeholder="Enter your email">
+        <input type="password" id="password" placeholder="Enter your password">
+        <button onclick="handleLogin()">Login / Signup</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <!-- 1. Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 2. APNI YAHAN DETAILS DAAL (Yeh sabse zaroori hai)
+        const SUPABASE_URL = "https://rrlycsatujfqpuuydcmo.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_Z6QtDrhOWKS5ogEW9gcLvA__Y5WZfxT";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 3. Login Function
+        async function handleLogin() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const statusDiv = document.getElementById("status");
+            
+            statusDiv.innerText = "Wait, checking...";
+            statusDiv.style.color = "blue";
+
+            if (!email || !password) {
+                statusDiv.innerText = "Please enter email and password.";
+                statusDiv.style.color = "red";
+                return;
+            }
+
+            try {
+                // Step 1: Pehle Login Try Kar
+                const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+                if (loginData.user) {
+                    statusDiv.innerText = "Login Success! Redirecting...";
+                    statusDiv.style.color = "green";
+                    setTimeout(() => { window.location.href = "onboarding.html"; }, 1000);
+                    return;
+                }
+
+                // Step 2: Agar Login Fail ho (User exist nahi karta), to Signup Kar
+                if (loginError) {
+                    statusDiv.innerText = "User not found, creating new account...";
+                    
+                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+                    
+                    if (signUpError) {
+                        statusDiv.innerText = "Error: " + signUpError.message;
+                        statusDiv.style.color = "red";
+                        return;
+                    }
+
+                    if (signUpData.user) {
+                        statusDiv.innerText = "Account Created! Redirecting...";
+                        statusDiv.style.color = "green";
+                        setTimeout(() => { window.location.href = "onboarding.html"; }, 1000);
+                    }
+                }
+            } catch (err) {
+                statusDiv.innerText = "FATAL ERROR: " + err.message;
+                statusDiv.style.color = "red";
+            }
+        }
+    </script>
+</body>
+</html>
